@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useContext } from "react";
 import "./App.css";
 import "./index.css";
 import Cards from "./component/cards";
-import SidebarFr from "./component/sidebarfr";
+import SidebarFr from "./component/SidebarFr";
 import CustomizerPanel from "./component/CustomizerPanel";
 import Login from "./pages/Login";
 import gsap from "gsap";
