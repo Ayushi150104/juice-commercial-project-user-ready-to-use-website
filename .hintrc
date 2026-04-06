@@ -1,0 +1,13 @@
+{
+    "connector": {...},
+    "formatters": [...],
+    "hints": {
+        "stylesheet-limit": ["error", {
+            "maxRules": 1000,
+            "maxSheets": 10,
+            "maxImports": 2
+        }],
+        ...
+    },
+    ...
+}

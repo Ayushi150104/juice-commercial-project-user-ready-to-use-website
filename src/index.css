@@ -1,0 +1,317 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* GLOBAL */
+body {
+  margin: 0;
+  overflow-x: hidden;
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+}
+.theme-purple {
+  background: linear-gradient(90deg, #60009f 5%, #360147, #001e09);
+}
+.theme-red {
+  background: linear-gradient(90deg, #9f0000 5%, #470101, #001e09);
+}
+.theme-family {
+  background: linear-gradient(90deg, #da598c, #a0123d, #001e09);
+}
+
+.theme-summer {
+  background: linear-gradient(90deg, #e9eb6c, #88c26e, #001e09);
+}
+/* tall container — scroll yahan hoga */
+#sticky-container {
+  height: 130vh;
+  position: relative;
+}
+
+/* scene screen pe stick karega */
+#sticky-scene {
+  position: visible;
+  top: 0;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* JUICE text — screen center */
+#juice {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  pointer-events: none;
+  z-index: 1;
+}
+
+#juice h1 {
+  font-size: 12vw;
+  letter-spacing: 5vw;
+  display: flex;
+  gap: 3vw;
+  color: white;
+  margin: 0;
+}
+
+/* BIO — screen ke bilkul center mein */
+#bio {
+  position: absolute;
+  top: 60%;
+  right: 8%;
+  transform: translateY(-50%);
+  width: 420px;
+  color: white;
+  opacity: 0;
+  z-index: 10;
+  pointer-events: none;
+}
+
+#bio p {
+  font-family: monospace;
+  font-size: 1.4rem;
+  font-weight: bold;
+  line-height: 1.8;
+  white-space: normal;
+}
+
+/* DRINK — "I" ke upar se start */
+#drink {
+  position: absolute;
+  top: 30%;
+  left: 50%;
+  z-index: 20;
+  transform: translate(0%, -50%);
+}
+
+#jar {
+  width: 300px;
+  height: auto;
+  max-width: none;
+}
+.mocktail4-size {
+  transform: scale(2.2);
+}
+
+/* SCROLL BAR */
+.scroll-watcher {
+  height: 8px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  background-color: red;
+  width: 100%;
+  scale: 0 1;
+  transform-origin: left;
+  animation: scroll-watcher linear;
+  animation-timeline: scroll(y);
+}
+
+@keyframes scroll-watcher {
+  to {
+    scale: 1 1;
+  }
+}
+
+/* RESPONSIVE */
+@media (max-width: 630px) {
+  #jar {
+    width: 180px;
+  }
+  #bio p {
+    font-size: 1.2rem;
+  }
+}
+
+@media (max-width: 412px) {
+  #jar {
+    width: 150px;
+  }
+}
+
+/* 🌟 GLASS SCROLLBAR */
+.sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background: transparent; /* removes white strip */
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  backdrop-filter: blur(10px);
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+.sidebar.theme-purple {
+  background: linear-gradient(to bottom, #60009f 5%, #360147, #001e09);
+}
+
+.sidebar.theme-red {
+  background: linear-gradient(to bottom, #9f0000 5%, #470101, #001e09);
+}
+
+.sidebar.theme-family {
+  background: linear-gradient(to bottom, #da598c, #a0123d, #001e09);
+}
+
+.sidebar.theme-summer {
+  background: linear-gradient(to bottom, #e9eb6c, #88c26e, #001e09);
+}
+.cart-panel {
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+/* Chrome, Edge */
+.cart-panel::-webkit-scrollbar {
+  width: 6px;
+}
+
+.cart-panel::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.cart-panel::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 20px;
+  backdrop-filter: blur(8px);
+}
+
+.cart-panel::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
+@media (max-width: 768px) {
+  #bio {
+    display: none !important;
+  }
+}
+#jar {
+  width: 100px;
+}
+/* ================= MOBILE RESPONSIVE CART SIDEBAR ================= */
+@media screen and (max-width: 768px) {
+  .cart-panel {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 100vh !important;
+    top: 0 !important;
+    right: 0 !important;
+    padding: 14px !important;
+    padding-bottom: 100px !important; /* bottom buttons visible */
+    overflow-y: auto !important;
+    box-sizing: border-box !important;
+  }
+
+  .cart-panel h2 {
+    font-size: 24px !important;
+  }
+
+  .cart-panel img {
+    max-width: 60px !important;
+    height: auto !important;
+    object-fit: contain !important;
+  }
+
+  .cart-panel button {
+    font-size: 15px !important;
+  }
+
+  .cart-panel > div {
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+}
+
+/* Extra small phones */
+@media screen and (max-width: 480px) {
+  .cart-panel {
+    width: 100vw !important;
+    padding: 12px !important;
+    padding-bottom: 110px !important;
+  }
+}
+@media screen and (max-width: 768px) {
+  #drink {
+    left: 50% !important;
+    width: fit-content;
+  }
+}
+@media screen and (max-width: 768px) {
+  .jar-mocktail4 {
+    width: 220px !important;
+    height: auto !important;
+  }
+}
+/* 🌍 Global responsive fix */
+html,
+body {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+/* 📱 Tablet + mobile */
+@media (max-width: 768px) {
+  #sticky-container,
+  #sticky-scene {
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+  #drink {
+    left: 50% !important;
+    transform: translateX(-50%);
+  }
+
+  #jar {
+    width: 170px !important;
+    height: auto;
+  }
+
+  #bio {
+    display: none;
+  }
+}
+
+/* 📱 Large phones */
+@media (max-width: 480px) {
+  #jar {
+    width: 200px !important;
+  }
+
+  #juice h1 {
+    font-size: 3rem;
+  }
+}
+
+/* 📱 Small phones */
+@media (max-width: 375px) {
+  #jar {
+    width: 150px !important;
+  }
+
+  #juice h1 {
+    font-size: 2.5rem;
+  }
+}
+
+/* 📱 Very small phones */
+@media (max-width: 320px) {
+  #jar {
+    width: 130px !important;
+  }
+
+  #juice h1 {
+    font-size: 2rem;
+  }
+}
