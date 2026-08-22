@@ -275,7 +275,7 @@ function App() {
             <>
               {cartItems.map((item, index) => {
                 const image = `https://juice-commercial-project-user-ready-to-n2gk.onrender.com${item.image}`;
-                console.log(item);
+
                 return (
                   <div
                     key={index}
@@ -366,18 +366,32 @@ function App() {
               })}
 
               {/* ✅ TOTAL INSIDE CART */}
-              {isPlacingOrder && !orderPlaced && cartItems.length > 0 && (
-                <h3
-                  style={{
-                    marginTop: "15px",
-                    borderTop: "1px solid gray",
-                    paddingTop: "10px",
-                    fontWeight: "bold",
-                  }}
-                >
-                  Total: ₹{item.totalPrice}
-                </h3>
-              )}
+              {cartItems.map((item) => {
+                // Use unique identifiers safely
+                const itemPrice = item.unitPrice || item.price || 0;
+
+                return (
+                  <div key={item._id || item.id}>
+                    <p>{item.name}</p>
+                    <p>Quantity: {item.quantity || 1}</p>
+
+                    {/* FIXED: Placed inside the map loop so 'item' is defined and accurate */}
+                    {isPlacingOrder && !orderPlaced && (
+                      <h3
+                        style={{
+                          marginTop: "15px",
+                          borderTop: "1px solid gray",
+                          paddingTop: "10px",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        Total: ₹{itemPrice * (item.quantity || 1)}
+                      </h3>
+                    )}
+                  </div>
+                );
+              })}
+
               {!orderPlaced && cartItems.length > 0 && (
                 <button
                   style={{
@@ -486,7 +500,16 @@ function App() {
           </div>
 
           {orderHistory.map((order) => {
-            console.log(order.total);
+            const options = {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            };
+            const orderedAt = new Date(order.createdAt).toLocaleString(
+              "en-IN",
+              options,
+            );
             return (
               <div
                 key={order.id}
@@ -509,13 +532,13 @@ function App() {
                     paddingBottom: "8px",
                   }}
                 >
-                  🕒 {order.createdAt}
+                  🕒 {orderedAt}
                 </p>
 
                 {/* ALL ITEMS INSIDE SAME BOX */}
                 {order.items.map((item, i) => {
                   const image = `https://juice-commercial-project-user-ready-to-n2gk.onrender.com${item.image}`;
-                  console.log(item);
+
                   return (
                     <div
                       key={i}
