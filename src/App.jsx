@@ -274,7 +274,7 @@ function App() {
           ) : (
             <>
               {cartItems.map((item, index) => {
-                const image = `http://localhost:5000${item.image}`;
+                const image = `https://juice-commercial-project-user-ready-to-n2gk.onrender.com${item.image}`;
                 return (
                   <div
                     key={index}
@@ -512,7 +512,7 @@ function App() {
 
                 {/* ALL ITEMS INSIDE SAME BOX */}
                 {order.items.map((item, i) => {
-                  const image = `http://localhost:5000${item.image}`;
+                  const image = `https://juice-commercial-project-user-ready-to-n2gk.onrender.com${item.image}`;
                   return (
                     <div
                       key={i}

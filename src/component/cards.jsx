@@ -92,7 +92,7 @@ const Cards = () => {
     <>
       <ul className="cards-container">
         {CardList.map((item) => {
-          const image = `http://localhost:5000${item.image}`;
+          const image = `https://juice-commercial-project-user-ready-to-n2gk.onrender.com${item.image}`;
 
           return (
             <li
