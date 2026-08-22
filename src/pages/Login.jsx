@@ -1,6 +1,7 @@
 import { useState } from "react";
+import api from "../api";
 
-export default function Login({ isOpen, onClose, setUser }) {
+export default function Login({ isOpen, onClose, setUser, setCurLog }) {
   const [isLogin, setIsLogin] = useState(true);
 
   const [name, setName] = useState("");
@@ -17,7 +18,7 @@ export default function Login({ isOpen, onClose, setUser }) {
     return pass.length >= 6 && /[A-Z]/.test(pass) && /[0-9]/.test(pass);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setError("");
 
     if (!email || !password || (!isLogin && !name)) {
@@ -35,13 +36,34 @@ export default function Login({ isOpen, onClose, setUser }) {
       return;
     }
 
-    const userData = {
-      name: name || "User",
-      email,
-    };
+    try {
+      let res;
 
-    localStorage.setItem("user", JSON.stringify(userData));
-    setUser(userData);
+      // 2. Corrected conditional logic and payloads
+      if (isLogin) {
+        const userData = { email, password };
+        res = await api.post("/auth/login", userData);
+      } else {
+        const userData = { name, email, password };
+        res = await api.post("/auth/register", userData);
+      }
+
+      // 3. Extract the successful payload from Axios response
+      const serverUserData = res.data;
+
+      // 4. Save to state and localStorage only after API success
+      localStorage.setItem("user", JSON.stringify(serverUserData.data.user));
+      localStorage.setItem("token", serverUserData.data.accessToken);
+      setUser(serverUserData);
+      setCurLog(true);
+
+      // 5. Close window on success
+      onClose();
+    } catch (err) {
+      // 6. Handle backend errors cleanly without crashing
+      const fallbackError = "Something went wrong. Please try again.";
+      setError(err.response?.data?.message || err.message || fallbackError);
+    }
 
     onClose();
   };

@@ -1,0 +1,47 @@
+{
+  "name": "juice-backend",
+  "version": "1.0.0",
+  "description": "Backend for the Juice website (Express + MongoDB + Mongoose, MVC) — mock payment, no real gateway",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "seed": "node seed/seed.js",
+    "test:offline": "node tests/offline.js",
+    "test:checkout": "node tests/checkout.js",
+    "test:e2e": "node tests/e2e.js",
+    "db:show": "node scripts/use-db.js show",
+    "db:local": "node scripts/use-db.js local",
+    "db:atlas": "node scripts/use-db.js atlas"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cloudinary": "^2.10.0",
+    "compression": "^1.8.1",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^4.22.2",
+    "express-mongo-sanitize": "^2.2.0",
+    "express-rate-limit": "^8.6.1",
+    "express-validator": "^7.3.2",
+    "helmet": "^8.3.0",
+    "jsonwebtoken": "^9.0.3",
+    "mongodb": "^7.5.0",
+    "mongoose": "^8.9.0",
+    "morgan": "^1.11.0",
+    "multer": "^2.2.0",
+    "winston": "^3.19.0",
+    "xss": "^1.0.15"
+  },
+  "devDependencies": {
+    "mongodb-memory-server": "^11.2.0",
+    "nodemon": "^3.1.14"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

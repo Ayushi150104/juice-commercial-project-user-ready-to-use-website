@@ -1,9 +1,10 @@
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import "./CustomizerPanel.css";
 import { CartContext } from "../CartContext";
+import api from "../api";
 
 export default function CustomizerPanel({ isOpen, onClose }) {
-  const { addToCart } = useContext(CartContext);
+  const { refreshCart } = useContext(CartContext);
 
   const [juice, setJuice] = useState({
     fruits: [],
@@ -14,22 +15,26 @@ export default function CustomizerPanel({ isOpen, onClose }) {
   // idle | loading | success
   const [cartStatus, setCartStatus] = useState("idle");
 
-  const fruits = [
-    "🍎 Apple",
-    "🍌 Banana",
-    "🍓 Strawberry",
-    "🍍 Pineapple",
-    "🥭 Mango",
-    "🍇 Grapes",
-    "🍉 Watermelon",
-    "🍊 Orange",
-    "🍒 Cherry",
-    "🥝 Kiwi",
-    "🥤 Mixed Juice",
-  ];
+  const [fruits, setFruits] = useState([]);
 
-  const bases = ["💧 Water", "🥛 Milk", "🍶 Yogurt"];
-  const extras = ["💪 Protein", "🍯 Honey"];
+  const [bases, setBases] = useState([]);
+  const [extras, setExtras] = useState([]);
+
+  useEffect(() => {
+    const loadCustomizerOptions = async () => {
+      try {
+        const res = await api.get("/customizer/options");
+        const data = res.data.data;
+
+        setBases(data.bases);
+        setExtras(data.extras);
+        setFruits(data.fruits);
+      } catch (error) {
+        console.log("Encountered Error : ", error);
+      }
+    };
+    loadCustomizerOptions();
+  }, []);
 
   // ✅ universal multi-select toggle
   const toggle = (type, value) => {
@@ -42,26 +47,36 @@ export default function CustomizerPanel({ isOpen, onClose }) {
   };
 
   // ✅ Add to cart
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (cartStatus === "loading") return;
 
     setCartStatus("loading");
 
-    const item = {
-      fruits: juice.fruits,
-      base: juice.base.length ? juice.base : ["None"],
-      extras: juice.extras.length ? juice.extras : ["None"],
-      price: price,
-    };
+    try {
+      const item = {
+        kind: "custom",
+        fruits: juice.fruits.map((f) => f.label),
+        base: juice.base.map((b) => b.label),
+        extras: juice.extras.map((e) => e.label),
+        quantity: 1,
+      };
 
-    setTimeout(() => {
-      addToCart(item);
+      const res = await api.post("/cart/items", item, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
       setCartStatus("success");
 
       setTimeout(() => {
         setCartStatus("idle");
       }, 1200);
-    }, 1200);
+      await refreshCart();
+    } catch (error) {
+      console.error("Failed to add custom item:", error);
+      setCartStatus("idle");
+    }
   };
 
   // 💰 Price logic
@@ -84,13 +99,13 @@ export default function CustomizerPanel({ isOpen, onClose }) {
           {/* FRUITS */}
           <p className="section-title">Fruits</p>
           <div className="chips">
-            {fruits.map((f) => (
+            {fruits.map((f, idx) => (
               <button
-                key={f}
+                key={f._id}
                 className={juice.fruits.includes(f) ? "active" : ""}
                 onClick={() => toggle("fruits", f)}
               >
-                {f}
+                {f.label}
               </button>
             ))}
           </div>
@@ -100,11 +115,11 @@ export default function CustomizerPanel({ isOpen, onClose }) {
           <div className="chips">
             {bases.map((b) => (
               <button
-                key={b}
+                key={b._id}
                 className={juice.base.includes(b) ? "active" : ""}
                 onClick={() => toggle("base", b)}
               >
-                {b}
+                {b.label}
               </button>
             ))}
           </div>
@@ -114,11 +129,11 @@ export default function CustomizerPanel({ isOpen, onClose }) {
           <div className="chips">
             {extras.map((e) => (
               <button
-                key={e}
+                key={e._id}
                 className={juice.extras.includes(e) ? "active" : ""}
                 onClick={() => toggle("extras", e)}
               >
-                {e}
+                {e.label}
               </button>
             ))}
           </div>
@@ -126,9 +141,14 @@ export default function CustomizerPanel({ isOpen, onClose }) {
 
         {/* 💳 PREVIEW */}
         <div className="preview">
-          <p>{juice.fruits.join(" + ") || "Select items"}</p>
-          <p>Base: {juice.base.join(", ") || "None"}</p>
-          <p>Extras: {juice.extras.join(", ") || "None"}</p> {/* ✅ added */}
+          <p>
+            {juice.fruits.map((i) => i.label).join(" + ") || "Select items"}
+          </p>
+          <p>Base: {juice.base.map((i) => i.label).join(", ") || "None"}</p>
+          <p>
+            Extras: {juice.extras.map((i) => i.label).join(", ") || "None"}
+          </p>{" "}
+          {/* ✅ added */}
           <p className="price">₹{price}</p>
           {/* 🛒 BUTTON */}
           <button

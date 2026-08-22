@@ -31,6 +31,7 @@ function App() {
   const { cartItems, removeFromCart, placeOrder, clearCart, orderHistory } =
     useContext(CartContext);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [curLog, setCurLog] = useState(false);
 
   // ✅ TOTAL PRICE
   const totalPrice = cartItems.reduce((sum, item) => {
@@ -50,7 +51,8 @@ function App() {
     if (storedUser) {
       setUser(storedUser);
     }
-  }, []);
+    setCurLog(false);
+  }, [curLog]);
 
   useEffect(() => {
     document.body.classList.remove(
@@ -141,6 +143,7 @@ function App() {
         isOpen={showLogin}
         onClose={() => setShowLogin(false)}
         setUser={setUser}
+        setCurLog={setCurLog}
       />
 
       {/* 🔥 HERO SECTION */}
@@ -270,93 +273,96 @@ function App() {
             <p>No items in cart</p>
           ) : (
             <>
-              {cartItems.map((item, index) => (
-                <div
-                  key={index}
-                  style={{
-                    marginBottom: "15px",
-                    position: "relative",
-                    padding: "12px",
-                    borderRadius: "14px",
-                    background: "rgba(255,255,255,0.05)",
-                    border: "1px solid rgba(255,255,255,0.08)",
-                    display: "flex",
-                    gap: "12px",
-                    alignItems: "center",
-                  }}
-                >
-                  {/* ❌ REMOVE BUTTON (top-right) */}
-                  <button
-                    onClick={() => removeFromCart(index)}
+              {cartItems.map((item, index) => {
+                const image = `http://localhost:5000${item.image}`;
+                return (
+                  <div
+                    key={index}
                     style={{
-                      position: "absolute",
-                      top: "0",
-                      right: "0",
-                      background: "transparent",
-                      color: "white",
-                      border: "none",
-                      fontSize: "16px",
-                      cursor: "pointer",
+                      marginBottom: "15px",
+                      position: "relative",
+                      padding: "12px",
+                      borderRadius: "14px",
+                      background: "rgba(255,255,255,0.05)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                      display: "flex",
+                      gap: "12px",
+                      alignItems: "center",
                     }}
                   >
-                    ×
-                  </button>
-
-                  {/* IMAGE */}
-                  {item.image && (
-                    <div
+                    {/* ❌ REMOVE BUTTON (top-right) */}
+                    <button
+                      onClick={() => removeFromCart(item)}
                       style={{
-                        width: "75px",
-                        height: "85px",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        overflow: "hidden",
+                        position: "absolute",
+                        top: "0",
+                        right: "0",
+                        background: "transparent",
+                        color: "white",
+                        border: "none",
+                        fontSize: "16px",
+                        cursor: "pointer",
                       }}
                     >
-                      <img
-                        src={item.image}
-                        alt={item.name}
+                      ×
+                    </button>
+
+                    {/* IMAGE */}
+                    {item.image && (
+                      <div
                         style={{
-                          width: "100%",
-                          height: "100%",
-                          objectFit: "contain",
-                          transform: "scale(1.2)",
+                          width: "75px",
+                          height: "85px",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          overflow: "hidden",
                         }}
-                      />
+                      >
+                        <img
+                          src={image}
+                          alt={item.name}
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "contain",
+                            transform: "scale(1.2)",
+                          }}
+                        />
+                      </div>
+                    )}
+
+                    {/* DETAILS */}
+                    <div style={{ flex: 1 }}>
+                      <p style={{ fontWeight: "600", marginBottom: "4px" }}>
+                        {item.fruits ? item.fruits.join(" + ") : item.name}
+                      </p>
+
+                      {item.base && (
+                        <p style={{ fontSize: "13px", opacity: 0.8 }}>
+                          Base: {item.base}
+                        </p>
+                      )}
+
+                      {item.extras && (
+                        <p style={{ fontSize: "13px", opacity: 0.8 }}>
+                          Extras: {item.extras.join(" + ")}
+                        </p>
+                      )}
+
+                      {item.quantity && (
+                        <p style={{ fontSize: "13px" }}>Qty: {item.quantity}</p>
+                      )}
+
+                      <p style={{ fontWeight: "bold", marginTop: "5px" }}>
+                        ₹{item.price * (item.quantity || 1)}
+                      </p>
                     </div>
-                  )}
 
-                  {/* DETAILS */}
-                  <div style={{ flex: 1 }}>
-                    <p style={{ fontWeight: "600", marginBottom: "4px" }}>
-                      {item.fruits ? item.fruits.join(" + ") : item.name}
-                    </p>
-
-                    {item.base && (
-                      <p style={{ fontSize: "13px", opacity: 0.8 }}>
-                        Base: {item.base}
-                      </p>
-                    )}
-
-                    {item.extras && (
-                      <p style={{ fontSize: "13px", opacity: 0.8 }}>
-                        Extras: {item.extras.join(" + ")}
-                      </p>
-                    )}
-
-                    {item.quantity && (
-                      <p style={{ fontSize: "13px" }}>Qty: {item.quantity}</p>
-                    )}
-
-                    <p style={{ fontWeight: "bold", marginTop: "5px" }}>
-                      ₹{item.price * (item.quantity || 1)}
-                    </p>
+                    <hr />
                   </div>
-
-                  <hr />
-                </div>
-              ))}
+                );
+              })}
 
               {/* ✅ TOTAL INSIDE CART */}
               {isPlacingOrder && !orderPlaced && cartItems.length > 0 && (
@@ -478,125 +484,134 @@ function App() {
             </button>
           </div>
 
-          {orderHistory.map((order) => (
-            <div
-              key={order.id}
-              style={{
-                marginBottom: "40px",
-                padding: "15px",
-                borderRadius: "16px",
-                background: "rgba(255,255,255,0.12)",
-                border: "1px solid rgba(255,255,255,0.18)",
-                boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
-                backdropFilter: "blur(8px)",
-              }}
-            >
-              {/* ORDER DATE */}
-              <p
+          {orderHistory.map((order) => {
+            return (
+              <div
+                key={order.id}
                 style={{
-                  fontWeight: "600",
-                  marginBottom: "12px",
-                  borderBottom: "1px solid rgba(255,255,255,0.1)",
-                  paddingBottom: "8px",
+                  marginBottom: "40px",
+                  padding: "15px",
+                  borderRadius: "16px",
+                  background: "rgba(255,255,255,0.12)",
+                  border: "1px solid rgba(255,255,255,0.18)",
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
+                  backdropFilter: "blur(8px)",
                 }}
               >
-                🕒 {order.orderedAt}
-              </p>
-
-              {/* ALL ITEMS INSIDE SAME BOX */}
-              {order.items.map((item, i) => (
-                <div
-                  key={i}
+                {/* ORDER DATE */}
+                <p
                   style={{
+                    fontWeight: "600",
                     marginBottom: "12px",
-                    padding: "10px",
-                    borderRadius: "12px",
-                    background: "rgba(255,255,255,0.04)",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "12px",
+                    borderBottom: "1px solid rgba(255,255,255,0.1)",
+                    paddingBottom: "8px",
                   }}
                 >
-                  {/* LEFT IMAGE */}
-                  {item.image && (
+                  🕒 {order.createdAt}
+                </p>
+
+                {/* ALL ITEMS INSIDE SAME BOX */}
+                {order.items.map((item, i) => {
+                  const image = `http://localhost:5000${item.image}`;
+                  return (
                     <div
+                      key={i}
                       style={{
-                        width: "55px",
-                        height: "65px",
-                        flexShrink: 0,
+                        marginBottom: "12px",
+                        padding: "10px",
+                        borderRadius: "12px",
+                        background: "rgba(255,255,255,0.04)",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "12px",
                       }}
                     >
-                      <img
-                        src={item.image}
-                        alt={item.name}
-                        style={{
-                          width:
-                            item.name === "Special Mocktail" ? "55px" : "100%",
-                          height:
-                            item.name === "Special Mocktail" ? "55px" : "100%",
-                          objectFit: "contain",
-                          transform:
-                            item.name === "Special Mocktail"
-                              ? "scale(1.15)"
-                              : "scale(1)",
-                        }}
-                      />
+                      {/* LEFT IMAGE */}
+                      {item.kind === "product" && (
+                        <div
+                          style={{
+                            width: "55px",
+                            height: "65px",
+                            flexShrink: 0,
+                          }}
+                        >
+                          <img
+                            src={image}
+                            style={{
+                              width:
+                                item.name === "Special Mocktail"
+                                  ? "55px"
+                                  : "100%",
+                              height:
+                                item.name === "Special Mocktail"
+                                  ? "55px"
+                                  : "100%",
+                              objectFit: "contain",
+                              transform:
+                                item.name === "Special Mocktail"
+                                  ? "scale(1.15)"
+                                  : "scale(1)",
+                            }}
+                          />
+                        </div>
+                      )}
+
+                      {/* RIGHT DETAILS */}
+                      <div style={{ flex: 1 }}>
+                        <p style={{ fontWeight: "600", marginBottom: "4px" }}>
+                          {item.fruits ? item.fruits.join(" + ") : item.name}
+                        </p>
+
+                        {item.base && (
+                          <p style={{ fontSize: "13px", opacity: 0.8 }}>
+                            Base: {item.base}
+                          </p>
+                        )}
+
+                        {item.extras && (
+                          <p style={{ fontSize: "13px", opacity: 0.8 }}>
+                            Extras: {item.extras.join(" + ")}
+                          </p>
+                        )}
+
+                        {item.quantity && (
+                          <p style={{ fontSize: "13px" }}>
+                            Qty: {item.quantity}
+                          </p>
+                        )}
+
+                        <p style={{ fontWeight: "bold" }}>₹{item.price}</p>
+                      </div>
                     </div>
-                  )}
-
-                  {/* RIGHT DETAILS */}
-                  <div style={{ flex: 1 }}>
-                    <p style={{ fontWeight: "600", marginBottom: "4px" }}>
-                      {item.fruits ? item.fruits.join(" + ") : item.name}
-                    </p>
-
-                    {item.base && (
-                      <p style={{ fontSize: "13px", opacity: 0.8 }}>
-                        Base: {item.base}
-                      </p>
-                    )}
-
-                    {item.extras && (
-                      <p style={{ fontSize: "13px", opacity: 0.8 }}>
-                        Extras: {item.extras.join(" + ")}
-                      </p>
-                    )}
-
-                    {item.quantity && (
-                      <p style={{ fontSize: "13px" }}>Qty: {item.quantity}</p>
-                    )}
-
-                    <p style={{ fontWeight: "bold" }}>₹{item.price}</p>
-                  </div>
-                </div>
-              ))}
-
-              {/* TOTAL */}
-              <div
-                style={{
-                  marginTop: "16px",
-                  padding: "12px 14px",
-                  borderRadius: "12px",
-                  background: "rgba(255,255,255,0.14)",
-                  border: "1px solid rgba(255,255,255,0.18)",
-                  boxShadow: "0 4px 10px rgba(0,0,0,0.25)",
-                  textAlign: "center",
-                }}
-              >
-                <h4
+                  );
+                })}
+                {/* TOTAL */}
+                <div
                   style={{
-                    margin: 0,
-                    fontSize: "22px",
-                    fontWeight: "700",
-                    letterSpacing: "0.5px",
-                    color: "white",
+                    marginTop: "16px",
+                    padding: "12px 14px",
+                    borderRadius: "12px",
+                    background: "rgba(255,255,255,0.14)",
+                    border: "1px solid rgba(255,255,255,0.18)",
+                    boxShadow: "0 4px 10px rgba(0,0,0,0.25)",
+                    textAlign: "center",
                   }}
                 >
-                  Total: ₹{order.total}
-                </h4>
+                  <h4
+                    style={{
+                      margin: 0,
+                      fontSize: "22px",
+                      fontWeight: "700",
+                      letterSpacing: "0.5px",
+                      color: "white",
+                    }}
+                  >
+                    Total: ₹{order.total}
+                  </h4>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </>
