@@ -580,7 +580,7 @@ function App() {
                           </p>
                         )}
 
-                        <p style={{ fontWeight: "bold" }}>₹{item.price}</p>
+                        <p style={{ fontWeight: "bold" }}>₹{item.total}</p>
                       </div>
                     </div>
                   );

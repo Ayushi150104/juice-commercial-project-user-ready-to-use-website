@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import api from "../api";
+import { CartContext } from "../CartContext";
 
 export default function Login({ isOpen, onClose, setUser, setCurLog }) {
   const [isLogin, setIsLogin] = useState(true);
@@ -8,12 +9,14 @@ export default function Login({ isOpen, onClose, setUser, setCurLog }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const [accepted, setAccepted] = useState(false); // ✅ NEW
-  const [error, setError] = useState(""); // ✅ NEW
+  const [accepted, setAccepted] = useState(false);
+  const [error, setError] = useState("");
+
+  // FIXED: Destructure loginSync from your CartContext to handle the token lifetime lifecycle
+  const { loginSync } = useContext(CartContext);
 
   if (!isOpen) return null;
 
-  // 🔐 PASSWORD VALIDATION
   const isStrongPassword = (pass) => {
     return pass.length >= 6 && /[A-Z]/.test(pass) && /[0-9]/.test(pass);
   };
@@ -39,7 +42,6 @@ export default function Login({ isOpen, onClose, setUser, setCurLog }) {
     try {
       let res;
 
-      // 2. Corrected conditional logic and payloads
       if (isLogin) {
         const userData = { email, password };
         res = await api.post("/auth/login", userData);
@@ -48,38 +50,36 @@ export default function Login({ isOpen, onClose, setUser, setCurLog }) {
         res = await api.post("/auth/register", userData);
       }
 
-      // 3. Extract the successful payload from Axios response
       const serverUserData = res.data;
 
-      // 4. Save to state and localStorage only after API success
+      // Save user details to storage
       localStorage.setItem("user", JSON.stringify(serverUserData.data.user));
-      localStorage.setItem("token", serverUserData.data.accessToken);
+
+      // FIXED: Pass the token to loginSync to alert your context provider globally
+      loginSync(serverUserData.data.accessToken);
+
       setUser(serverUserData);
       setCurLog(true);
 
-      // 5. Close window on success
+      // Close modal window ONLY upon verified server action success
       onClose();
     } catch (err) {
-      // 6. Handle backend errors cleanly without crashing
       const fallbackError = "Something went wrong. Please try again.";
       setError(err.response?.data?.message || err.message || fallbackError);
     }
 
-    onClose();
+    // FIXED: Removed the floating unconditional onClose() call that was down here!
   };
 
   return (
     <>
-      {/* OVERLAY */}
       <div
         className="fixed inset-0 bg-black/60 backdrop-blur z-40"
         onClick={onClose}
       ></div>
 
-      {/* POPUP */}
       <div className="fixed inset-0 z-50 flex items-center justify-center">
         <div className="relative w-[300px] p-6 bg-white/10 backdrop-blur rounded-xl shadow-lg text-white">
-          {/* CLOSE */}
           <button
             onClick={onClose}
             className="absolute top-3 right-3 text-white text-lg"
@@ -87,7 +87,6 @@ export default function Login({ isOpen, onClose, setUser, setCurLog }) {
             ✖
           </button>
 
-          {/* TOGGLE */}
           <div className="flex justify-between mb-4">
             <button
               onClick={() => setIsLogin(true)}
@@ -108,7 +107,6 @@ export default function Login({ isOpen, onClose, setUser, setCurLog }) {
             {isLogin ? "Welcome Back 👋" : "Create Account ✨"}
           </h2>
 
-          {/* NAME */}
           {!isLogin && (
             <input
               type="text"
@@ -118,7 +116,6 @@ export default function Login({ isOpen, onClose, setUser, setCurLog }) {
             />
           )}
 
-          {/* EMAIL */}
           <input
             type="email"
             placeholder="Enter email"
@@ -126,7 +123,6 @@ export default function Login({ isOpen, onClose, setUser, setCurLog }) {
             onChange={(e) => setEmail(e.target.value)}
           />
 
-          {/* PASSWORD */}
           <input
             type="password"
             placeholder="Enter password"
@@ -134,12 +130,10 @@ export default function Login({ isOpen, onClose, setUser, setCurLog }) {
             onChange={(e) => setPassword(e.target.value)}
           />
 
-          {/* 🔥 PASSWORD HINT */}
           <p className="text-xs text-gray-300 mb-3">
             Must include 6+ chars, 1 uppercase, 1 number
           </p>
 
-          {/* ✅ TERMS */}
           <div className="flex items-center gap-2 mb-3">
             <input
               type="checkbox"
@@ -149,10 +143,8 @@ export default function Login({ isOpen, onClose, setUser, setCurLog }) {
             <p className="text-xs">I agree to Terms & Conditions</p>
           </div>
 
-          {/* ❌ ERROR */}
           {error && <p className="text-red-400 text-xs mb-2">{error}</p>}
 
-          {/* SUBMIT */}
           <button
             onClick={handleSubmit}
             className={`w-full py-2 rounded transition ${
