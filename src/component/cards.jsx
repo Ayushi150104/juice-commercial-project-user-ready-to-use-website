@@ -1,19 +1,22 @@
-import { useEffect, useState } from "react";
-
+import { useEffect, useState, useContext } from "react";
 import mocktail4 from "./../assets/mocktail4.png";
-
 import "./cards.css";
-
 import Order from "./order";
-
 import api from "../api.js";
-import { useContext } from "react";
 import { CartContext } from "../CartContext";
 
 const Cards = () => {
   const [activeCard, setActiveCard] = useState(null);
   const [CardList, setCardList] = useState([]);
   const { refreshCart } = useContext(CartContext);
+
+  // States for products, popups, and selection
+  const [selectedItems, setSelectedItems] = useState([]);
+  const [checkoutItems, setCheckoutItems] = useState([]); // Keeps items safe for popup when selection wipes
+  const [showOrder, setShowOrder] = useState(false);
+
+  // 🔥 NEW STATE: Tracks which item IDs are currently displaying the "Added!" feedback flash
+  const [addedIndicatorIds, setAddedIndicatorIds] = useState([]);
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -24,55 +27,56 @@ const Cards = () => {
         console.log("Encountered Error : ", error);
       }
     };
-
     loadProducts();
   }, []);
 
-  // Selected products
-  const [selectedItems, setSelectedItems] = useState([]);
-
-  const [showOrder, setShowOrder] = useState(false);
-
-  // Add/remove product from selection
+  // Add/remove product from selection + flash indicator
   const handleSelect = (item) => {
     setSelectedItems((prev) => {
       const exists = prev.find((i) => i._id === item._id);
 
       if (exists) {
+        // Removing item: Just filter it out
         return prev.filter((i) => i._id !== item._id);
       } else {
+        // Adding item: Trigger the temporary green visual indicator flash
+        setAddedIndicatorIds((prevIds) => [...prevIds, item._id]);
+
+        // Remove the flash class automatically after 1.5 seconds
+        setTimeout(() => {
+          setAddedIndicatorIds((prevIds) =>
+            prevIds.filter((id) => id !== item._id),
+          );
+        }, 1500);
+
         return [...prev, item];
       }
     });
   };
 
   // Add selected products to backend cart
-  const handleAddSelectedToCart = async () => {
+  const handleAddSelectedToCart = async (itemsToSubmit) => {
     const token = localStorage.getItem("token");
-
-    // User must be logged in
     if (!token) {
       console.log("User is not logged in");
       return;
     }
 
     try {
-      for (const item of selectedItems) {
+      // Fire requests in parallel to prevent sequential network lag loops
+      const cartPromises = itemsToSubmit.map((item) => {
         const cartItem = {
           kind: "product",
           productId: item._id,
           quantity: 1,
         };
-
-        await api.post("/cart/items", cartItem, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+        return api.post("/cart/items", cartItem, {
+          headers: { Authorization: `Bearer ${token}` },
         });
-      }
+      });
 
+      await Promise.all(cartPromises);
       await refreshCart();
-      setSelectedItems([]);
     } catch (error) {
       console.log(
         "Failed to add products to cart:",
@@ -81,10 +85,9 @@ const Cards = () => {
     }
   };
 
-  // Close order popup
   const close = () => {
     setShowOrder(false);
-    setSelectedItems([]);
+    setCheckoutItems([]);
     document.body.style.overflow = "auto";
   };
 
@@ -93,6 +96,10 @@ const Cards = () => {
       <ul className="cards-container">
         {CardList.map((item) => {
           const image = `https://juice-commercial-project-user-ready-to-n2gk.onrender.com${item.image}`;
+
+          // Helper flags for state evaluation
+          const isSelected = selectedItems.find((i) => i._id === item._id);
+          const isJustAdded = addedIndicatorIds.includes(item._id);
 
           return (
             <li
@@ -103,17 +110,12 @@ const Cards = () => {
               }
             >
               <div
-                className={`card-image${
-                  item.image === mocktail4 ? " mocktail4-fix" : ""
-                }`}
-                style={{
-                  backgroundImage: `url(${image})`,
-                }}
+                className={`card-image${item.image === mocktail4 ? " mocktail4-fix" : ""}`}
+                style={{ backgroundImage: `url(${image})` }}
               ></div>
 
               <div className="card-content">
                 <p className="card-title">{item.name}</p>
-
                 <p className="card-desc">
                   Taste the delight from {item.address}
                 </p>
@@ -123,11 +125,10 @@ const Cards = () => {
                     e.stopPropagation();
                     handleSelect(item);
                   }}
-                  className="card-btn"
+                  // Dynamic class turns the button green when 'isJustAdded' is active
+                  className={`card-btn ${isJustAdded ? "indicator-added" : ""}`}
                 >
-                  {selectedItems.find((i) => i._id === item._id)
-                    ? "Selected"
-                    : "Add"}
+                  {isJustAdded ? "Added! ✓" : isSelected ? "Selected" : "Add"}
                 </button>
               </div>
             </li>
@@ -137,18 +138,18 @@ const Cards = () => {
 
       {/* GLOBAL BUTTON */}
       {selectedItems.length > 0 && (
-        <div
-          style={{
-            textAlign: "center",
-            marginTop: "20px",
-          }}
-        >
+        <div style={{ textAlign: "center", marginTop: "20px" }}>
           <button
             className="card-btn"
             onClick={async () => {
-              await handleAddSelectedToCart();
+              const itemsToSubmit = [...selectedItems];
+              setCheckoutItems(itemsToSubmit); // Lock items for the modal checkout view
+              setSelectedItems([]); // Clear selections immediately for Optimistic UI feedback
 
+              setShowOrder(true); // Open modal popup window layout
               document.body.style.overflow = "hidden";
+
+              await handleAddSelectedToCart(itemsToSubmit);
             }}
           >
             Place Order ({selectedItems.length})
@@ -157,7 +158,7 @@ const Cards = () => {
       )}
 
       {/* ORDER POPUP */}
-      {showOrder && <Order orderDetails={selectedItems} onClose={close} />}
+      {showOrder && <Order orderDetails={checkoutItems} onClose={close} />}
     </>
   );
 };

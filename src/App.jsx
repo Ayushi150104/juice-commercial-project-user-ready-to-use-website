@@ -275,6 +275,7 @@ function App() {
             <>
               {cartItems.map((item, index) => {
                 const image = `https://juice-commercial-project-user-ready-to-n2gk.onrender.com${item.image}`;
+                console.log(item);
                 return (
                   <div
                     key={index}
@@ -374,7 +375,7 @@ function App() {
                     fontWeight: "bold",
                   }}
                 >
-                  Total: ₹{totalPrice}
+                  Total: ₹{item.totalPrice}
                 </h3>
               )}
               {!orderPlaced && cartItems.length > 0 && (
@@ -485,6 +486,7 @@ function App() {
           </div>
 
           {orderHistory.map((order) => {
+            console.log(order.total);
             return (
               <div
                 key={order.id}
@@ -513,6 +515,7 @@ function App() {
                 {/* ALL ITEMS INSIDE SAME BOX */}
                 {order.items.map((item, i) => {
                   const image = `https://juice-commercial-project-user-ready-to-n2gk.onrender.com${item.image}`;
+                  console.log(item);
                   return (
                     <div
                       key={i}
@@ -580,7 +583,9 @@ function App() {
                           </p>
                         )}
 
-                        <p style={{ fontWeight: "bold" }}>₹{item.total}</p>
+                        <p style={{ fontWeight: "bold" }}>
+                          ₹{item.quantity * item.unitPrice}
+                        </p>
                       </div>
                     </div>
                   );

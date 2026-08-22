@@ -1,31 +1,27 @@
 import { useState, useEffect, useContext } from "react";
 import "./order.css";
 import { CartContext } from "../CartContext";
+import api from "../api.js";
 
 const Order = ({ orderDetails, onClose }) => {
-  const { addToCart } = useContext(CartContext);
+  // Pull core state controls from your verified context provider
+  const { placeOrder, refreshCart } = useContext(CartContext);
+
   const [showLoader, setShowLoader] = useState(false);
   const [progress, setProgress] = useState(0);
   const [orderConfirmed, setOrderConfirmed] = useState(false);
+  const [loaderMessage, setLoaderMessage] = useState("Adding to cart...");
 
-  // Local items state (for remove feature)
+  // Manage checkout items locally
   const [items, setItems] = useState(orderDetails);
-
-  // per-item quantity
   const [quantities, setQuantities] = useState({});
 
   const quantityList = [1, 2, 3, 4, 5, 6];
 
-  const close = () => {
-    onClose();
-  };
-
-  // REMOVE ITEM
   const handleRemove = (id) => {
-    setItems((prev) => prev.filter((item) => item.id !== id));
+    setItems((prev) => prev.filter((item) => item._id !== id));
   };
 
-  // HANDLE QUANTITY CHANGE
   const handleQuantityChange = (id, value) => {
     setQuantities((prev) => ({
       ...prev,
@@ -33,48 +29,81 @@ const Order = ({ orderDetails, onClose }) => {
     }));
   };
 
-  const handleOrder = () => {
+  const handleOrder = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("Please log in to check out!");
+      return;
+    }
+
     setShowLoader(true);
-    setProgress(0);
+    setProgress(10);
+    setLoaderMessage("Adding items to database cart...");
 
-    let val = 0;
+    try {
+      // 1. STEP ONE: Add items to backend database cart in parallel
+      const cartPromises = items.map((item) => {
+        const qty = quantities[item._id] || 1;
+        return api.post(
+          "/cart/items",
+          {
+            kind: "product",
+            productId: item._id,
+            quantity: qty,
+          },
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        );
+      });
 
-    const interval = setInterval(() => {
-      val += 10;
-      setProgress(val);
+      // Wait for all cart insertions to write completely
+      await Promise.all(cartPromises);
+      setProgress(50);
+      setLoaderMessage("Cart synced! Finalising checkout request...");
 
-      if (val >= 100) {
-        clearInterval(interval);
+      // Update the main header cart layout states
+      await refreshCart();
+      setProgress(75);
 
-        setTimeout(() => {
-          // ADD ALL ITEMS TO CART
-          items.forEach((item) => {
-            const qty = quantities[item.id] || 1;
+      // Format to track pricing attributes safely
+      const formattedItems = items.map((item) => ({
+        productId: item._id,
+        name: item.name,
+        unitPrice: item.unitPrice || item.price || 0,
+        quantity: quantities[item._id] || 1,
+      }));
 
-            addToCart({
-              name: item.name,
-              price: item.price,
-              image: item.image,
-              quantity: qty,
-            });
-          });
+      // 2. STEP TWO: Dispatch the primary checkout payload
+      // Your backend documentation confirms it snapshots this active cart,
+      // writes the order, processes the mock payment, and handles cleanup!
+      await placeOrder(formattedItems, total);
 
-          setShowLoader(false);
-          setOrderConfirmed(true);
+      setProgress(100);
+      setShowLoader(false);
+      setOrderConfirmed(true);
 
-          setTimeout(() => {
-            setOrderConfirmed(false);
-            close();
-          }, 1200);
-        }, 400);
-      }
-    }, 100);
+      setTimeout(() => {
+        setOrderConfirmed(false);
+        onClose();
+      }, 1200);
+    } catch (error) {
+      clearInterval(interval);
+      setShowLoader(false);
+      console.error(
+        "Order processing sequence failed:",
+        error.response?.data || error.message,
+      );
+      alert(
+        `Checkout Failed: ${error.response?.data?.message || "Server error occurred"}`,
+      );
+    }
   };
 
-  // UPDATED TOTAL
   const total = items.reduce((sum, item) => {
-    const qty = quantities[item.id] || 1;
-    return sum + item.price * qty;
+    const qty = quantities[item._id] || 1;
+    const priceValue = item.unitPrice || item.price || 0;
+    return sum + priceValue * qty;
   }, 0);
 
   useEffect(() => {
@@ -86,10 +115,8 @@ const Order = ({ orderDetails, onClose }) => {
 
   return (
     <>
-      {/* Overlay */}
-      <div className="overlay" onClick={close}></div>
+      <div className="overlay" onClick={onClose}></div>
 
-      {/* Modal */}
       <div className="order-modal">
         <h2 className="order-title">Order Details</h2>
 
@@ -107,13 +134,14 @@ const Order = ({ orderDetails, onClose }) => {
           </div>
         ) : (
           <>
-            {/* ITEMS */}
             {items.map((item) => {
-              const qty = quantities[item.id] || 1;
+              const qty = quantities[item._id] || 1;
+              const displayPrice = item.unitPrice || item.price || 0;
+              const image = `https://juice-commercial-project-user-ready-to-n2gk.onrender.com${item.image}`;
 
               return (
                 <div
-                  key={item.id}
+                  key={item._id}
                   className="order-item"
                   style={{
                     display: "flex",
@@ -123,9 +151,8 @@ const Order = ({ orderDetails, onClose }) => {
                     position: "relative",
                   }}
                 >
-                  {/* REMOVE BUTTON */}
                   <button
-                    onClick={() => handleRemove(item.id)}
+                    onClick={() => handleRemove(item._id)}
                     style={{
                       position: "absolute",
                       top: "6px",
@@ -141,20 +168,13 @@ const Order = ({ orderDetails, onClose }) => {
                     ❌
                   </button>
 
-                  {/* IMAGE */}
-                  <img
-                    src={item.image}
-                    alt={item.name}
-                    className="mocktail-img"
-                  />
+                  <img src={image} className="mocktail-img" alt={item.name} />
 
-                  {/* INFO */}
                   <div style={{ flex: 1, textAlign: "left" }}>
                     <p className="order-name">{item.name}</p>
-                    <p>{item.address}</p>
-                    <p>₹ {item.price}</p>
+                    <p className="text-xs opacity-75">{item.address}</p>
+                    <p className="text-sm font-semibold">₹ {displayPrice}</p>
 
-                    {/* QUANTITY */}
                     <div className="quantity" style={{ marginTop: "5px" }}>
                       <span>Qty: {qty}</span>
 
@@ -162,7 +182,7 @@ const Order = ({ orderDetails, onClose }) => {
                         {quantityList.map((q) => (
                           <button
                             key={q}
-                            onClick={() => handleQuantityChange(item.id, q)}
+                            onClick={() => handleQuantityChange(item._id, q)}
                           >
                             {q}
                           </button>
@@ -174,16 +194,13 @@ const Order = ({ orderDetails, onClose }) => {
               );
             })}
 
-            {/* TOTAL */}
             <p className="price">Total: ₹ {total}</p>
 
-            {/* Buttons */}
             <div className="order-buttons">
               <button className="btn-primary" onClick={handleOrder}>
                 Proceed
               </button>
-
-              <button className="btn-danger" onClick={close}>
+              <button className="btn-danger" onClick={onClose}>
                 Cancel
               </button>
             </div>
@@ -191,10 +208,11 @@ const Order = ({ orderDetails, onClose }) => {
         )}
       </div>
 
-      {/* Loader */}
+      {/* LOADER */}
       {showLoader && (
         <div className="loader">
-          <p>Adding to cart...</p>
+          {/* Dynamic text changes to show users exactly what phase the background process is in */}
+          <p>{loaderMessage}</p>
           <div className="progress-bar">
             <div
               className="progress-fill"
@@ -204,10 +222,10 @@ const Order = ({ orderDetails, onClose }) => {
         </div>
       )}
 
-      {/* Success */}
+      {/* SUCCESS MODAL POPUP */}
       {orderConfirmed && (
         <div className="success">
-          <p>Added to cart! 🎉</p>
+          <p>Order Placed Successfully! 🎉</p>
         </div>
       )}
     </>

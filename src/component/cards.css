@@ -177,3 +177,12 @@
     transform: translateY(0);
   }
 }
+
+/* Custom temporary indicator flash state style definition */
+.card-btn.indicator-added {
+  background-color: #22c55e !important; /* Elegant emerald green success color */
+  color: white !important;
+  transform: scale(1.05);
+  transition: all 0.2s ease-in-out;
+  border-color: #16a34a !important;
+}
