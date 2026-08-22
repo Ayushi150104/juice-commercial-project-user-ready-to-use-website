@@ -223,6 +223,7 @@ function SidebarFr(props) {
                 <button
                   onClick={() => {
                     localStorage.removeItem("user");
+                    localStorage.setItem("token", "");
                     window.location.reload();
                   }}
                   className="text-red-400 text-sm mt-2 hover:text-red-500"
