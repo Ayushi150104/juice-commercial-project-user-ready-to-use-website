@@ -201,37 +201,38 @@ function SidebarFr(props) {
           />
         </ul>
         {/* 🔥 ADDED: Footer */}
-        <div className="mt-10">
+        <div className="mt-10 w-full">
           <hr className="mb-4" />
+          <div className="flex justify-between w-full items-center text-left">
+            <div className="flex items-center justify-center ml-3 gap-4 h-max w-full ">
+              <div
+                className="h-16 w-16 rounded-full bg-cover bg-center"
+                style={{ backgroundImage: `url(${profileImage})` }}
+              ></div>
 
-          <div className="flex items-center gap-4">
-            <div
-              className="h-16 w-16 rounded-full bg-cover bg-center"
-              style={{ backgroundImage: `url(${profileImage})` }}
-            ></div>
+              <div className="h-max w-full">
+                <p className="font-semibold text-lg text-left">
+                  {user ? user.name : "Guest"}
+                </p>
 
-            <div>
-              <p className="font-semibold text-lg">
-                {user ? user.name : "Guest"}
-              </p>
-
-              <p className="text-sm text-gray-400">
-                {user ? user.email : "Not logged in"}
-              </p>
-              {/* ✅ ADD THIS BUTTON */}
-              {user && (
-                <button
-                  onClick={() => {
-                    localStorage.removeItem("user");
-                    localStorage.setItem("token", "");
-                    localStorage.removeItem("orderHistory");
-                    window.location.reload();
-                  }}
-                  className="text-red-400 text-sm mt-2 hover:text-red-500"
-                >
-                  Logout
-                </button>
-              )}
+                <p className="text-sm text-gray-400">
+                  {user ? user.email : "Not logged in"}
+                </p>
+                {/* ✅ ADD THIS BUTTON */}
+                {user && (
+                  <button
+                    onClick={() => {
+                      localStorage.removeItem("user");
+                      localStorage.setItem("token", "");
+                      localStorage.removeItem("orderHistory");
+                      window.location.reload();
+                    }}
+                    className="text-red-400 text-sm mt-2 hover:text-red-500"
+                  >
+                    Logout
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>
